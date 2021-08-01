@@ -1,7 +1,6 @@
 ﻿#import Flask
 from flask import Flask, render_template, request, jsonify
 from gensim.models import Word2Vec
-from sklearn.manifold import TSNE
 import pandas as pd
 import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_confusion_matrix
@@ -37,7 +36,7 @@ def documentvec(word2vec_model,summarywords):
 @app.route('/predict/', methods=['GET','POST'])
 def predict():
 
-    print(request)
+
     if request.method == "POST":
         request_data = request.get_json()
 
@@ -186,9 +185,8 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
             file = open("DT_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
             category = trained_model.predict(test_vector)
-            
-        return category
-    pass
+    
+    return category
 
 if __name__ == '__main__':
     app.run(host="localhost", port=5050, debug=True)
