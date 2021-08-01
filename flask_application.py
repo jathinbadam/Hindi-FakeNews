@@ -83,6 +83,7 @@ def predict():
 
 def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_learning_method):
     
+    category = {}
     if feature_extraction_method == "Word2Vec":
 
         model = Word2Vec.load("word2vec.model")
@@ -100,7 +101,6 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
         test_summary_words = test_summary.split(' ')
         test_corpus= []
         test_corpus.append(test_summary_words)
-        category = {}
       
         model.build_vocab(test_corpus, update = True)
         model.train(test_corpus, total_examples=2, epochs = 1)
@@ -128,7 +128,9 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
             
             file = open("LR_W2V.pkl","rb")
             trained_model = joblib.load(file)
-            category = trained_model.predict(corpusLR)
+            category[0] = trained_model.predict(corpusLR)[0]
+
+         
         
         elif machine_learning_method == "randomForest":
 
@@ -137,7 +139,7 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
             
             file = open("RFC_W2V.pkl","rb")
             trained_model = joblib.load(file)
-            category = trained_model.predict(corpusRF)
+            category[0] = trained_model.predict(corpusRF)[0]
 
         elif machine_learning_method == "gradientBoosting":
 
@@ -146,7 +148,8 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
             
             file = open("GBC_W2V.pkl","rb")
             trained_model = joblib.load(file)
-            category = trained_model.predict(corpusGB)
+            category[0] = trained_model.predict(corpusGB)[0]
+        
         
         else:
 
@@ -155,36 +158,39 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
             
             file = open("DT_W2V.pkl","rb")
             trained_model = joblib.load(file)
-            category = trained_model.predict(corpusDT)
+            category[0] = trained_model.predict(corpusDT)[0]
     
     else:
 
-        vectorizer = joblib.load('vectorizer.pkl')
-        test_vector = vectorizer.transform(test_summary)
+    
+        file = open("vectorizer.pkl","rb")
+        vectorizer = joblib.load(file)
+        input=[test_summary]
+        test_vector = vectorizer.transform(input)
 
         if machine_learning_method == "logisticRegression":
 
             file = open("LR_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
-            category = trained_model.predict(test_vector)
+            category[0]= float(trained_model.predict(test_vector)[0])
 
         if machine_learning_method == "randomForest":
 
             file = open("RFC_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
-            category = trained_model.predict(test_vector)
+            category[0] = float(trained_model.predict(test_vector)[0])
 
         if machine_learning_method == "gradientBoosting":
 
             file = open("GBC_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
-            category = trained_model.predict(test_vector)
+            category[0] = float(trained_model.predict(test_vector)[0])
 
         else:
 
             file = open("DT_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
-            category = trained_model.predict(test_vector)
+            category[0] = float(trained_model.predict(test_vector)[0])
     
     return category
 
