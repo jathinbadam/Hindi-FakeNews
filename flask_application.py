@@ -45,14 +45,23 @@ def predict():
         feature_extraction_method = request_data['featureExtraction']
         machine_learning_method = request_data['machineLearning']
         data_entry_method = request_data['dataEntry']
+        sample_data_entry_method = request_data['sampleDataEntry']
 
         text_data = None
         link_data = None
 
-        if 'text' in request_data:
-            text_data = request_data['text']
-        if 'link' in request_data:
-            link_data = request_data['link']
+        if data_entry_method == 'sample':
+            if sample_data_entry_method == 'sampleLink':
+                data_entry_method == 'link'
+                link_data = request_data['sampleDataTypeLink']
+            else:
+                data_entry_method == 'text'
+                text_data = request_data['sampleDataTypeText']
+        else:
+            if 'text' in request_data:
+                text_data = request_data['text']
+            if 'link' in request_data:
+                link_data = request_data['link']
 
         if data_entry_method == 'text':
             test_summary = text_data
@@ -64,6 +73,7 @@ def predict():
 
             except ValueError:
                 return "Please Enter valid values"
+
         else :
             url = link_data
             article = Article(url)
