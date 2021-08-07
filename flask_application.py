@@ -12,6 +12,8 @@ from flask_cors import CORS, cross_origin
 import nltk
 from newspaper import Article
 import numpy as np
+import pickle as pk
+
 
 app = Flask(__name__)
 CORS(app, support_credentials=True)
@@ -67,7 +69,6 @@ def predict():
             article = Article(url)
             article.download()
             article.parse()
-            nltk.download('punkt')
             article.nlp()
             test_summary = article.summary
             try:
@@ -82,7 +83,7 @@ def predict():
     pass
 
 def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_learning_method):
-    
+
     category = {}
     if feature_extraction_method == "Word2Vec":
 
@@ -97,16 +98,22 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
             true_vector_floats.append(float(item))
         for item in False_vector:
             false_vector_floats.append(float(item))
-        
+
         test_summary_words = test_summary.split(' ')
         test_corpus= []
         test_corpus.append(test_summary_words)
-      
+
         model.build_vocab(test_corpus, update = True)
         model.train(test_corpus, total_examples=2, epochs = 1)
         test_vector = documentvec(model,test_summary_words)
-       
-        if machine_learning_method == "cosineSimilarity":
+        vector_pca_list = []
+        vector_pca_list.append(test_vector)
+        pca_reload = pk.load(open("pca.pkl",'rb'))
+        result_new = pca_reload.transform(vector_pca_list)
+        category[4] = result_new[0][0]
+        category[5] = result_new[0][1]
+
+        if machine_learning_method == "Cosine Similarity":
 
             true_class  = 1 - distance.cosine(test_vector,true_vector_floats)
             false_class  = 1 - distance.cosine(test_vector,false_vector_floats)
@@ -120,67 +127,67 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
                 category[1] = false_class
                 category[2] = true_class
                 category[3] =1
-        
-        elif machine_learning_method == "logisticRegression":
+
+        elif machine_learning_method == "Logistic Regression":
 
             corpusLR = []
             corpusLR.append(test_vector)
-            
+
             file = open("LR_W2V.pkl","rb")
             trained_model = joblib.load(file)
             category[0] = trained_model.predict(corpusLR)[0]
 
-         
-        
-        elif machine_learning_method == "randomForest":
+
+
+        elif machine_learning_method == "Random Forest":
 
             corpusRF = []
             corpusRF.append(test_vector)
-            
+
             file = open("RFC_W2V.pkl","rb")
             trained_model = joblib.load(file)
             category[0] = trained_model.predict(corpusRF)[0]
 
-        elif machine_learning_method == "gradientBoosting":
+        elif machine_learning_method == "Gradient Boosting":
 
             corpusGB = []
             corpusGB.append(test_vector)
-            
+
             file = open("GBC_W2V.pkl","rb")
             trained_model = joblib.load(file)
             category[0] = trained_model.predict(corpusGB)[0]
-        
-        
+
+
         else:
 
             corpusDT = []
             corpusDT.append(test_vector)
-            
+
             file = open("DT_W2V.pkl","rb")
             trained_model = joblib.load(file)
             category[0] = trained_model.predict(corpusDT)[0]
-    
+
     else:
 
-    
+
         file = open("vectorizer.pkl","rb")
         vectorizer = joblib.load(file)
         input=[test_summary]
         test_vector = vectorizer.transform(input)
 
-        if machine_learning_method == "logisticRegression":
+        if machine_learning_method == "Logistic Regression":
 
             file = open("LR_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
             category[0]= float(trained_model.predict(test_vector)[0])
 
-        if machine_learning_method == "randomForest":
+        if machine_learning_method == "Random Forest":
 
             file = open("RFC_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
             category[0] = float(trained_model.predict(test_vector)[0])
 
-        if machine_learning_method == "gradientBoosting":
+        if machine_learning_method == "Gradient Boosting":
 
             file = open("GBC_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
@@ -191,7 +198,7 @@ def preprocessDataAndPredict(test_summary, feature_extraction_method, machine_le
             file = open("DT_TFIDF.pkl","rb")
             trained_model = joblib.load(file)
             category[0] = float(trained_model.predict(test_vector)[0])
-    
+
     return category
 
 if __name__ == '__main__':
